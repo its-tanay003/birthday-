@@ -1480,13 +1480,38 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('key-send').addEventListener('click', () => {
     window.audio.playMechanicalClick();
     if (typedCode === "0521") {
-      // Code unlocked! Show Biometric Fingerprint hold scanner
-      document.querySelector('.squawk-keyboard').classList.add('hidden');
-      document.getElementById('biometric-scanner').classList.remove('hidden');
-      
-      const prompt = document.querySelector('.biometric-desc');
-      prompt.innerText = "SQUAWK NOMINAL. PRESS & HOLD THUMB TO INITIATE CO-PILOT COGNITIVE SYNC...";
-      prompt.classList.add('active');
+      // Code unlocked! Handle gyroscopic permissions if on iOS 13+
+      const showBiometricScanner = () => {
+        document.querySelector('.squawk-keyboard').classList.add('hidden');
+        document.getElementById('biometric-scanner').classList.remove('hidden');
+        
+        const prompt = document.querySelector('.biometric-desc');
+        prompt.innerText = "SQUAWK NOMINAL. PRESS & HOLD THUMB TO INITIATE CO-PILOT COGNITIVE SYNC...";
+        prompt.classList.add('active');
+      };
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const gyroOverlay = document.getElementById('gyro-permission');
+        gyroOverlay.classList.remove('hidden');
+        
+        document.getElementById('enable-gyro-btn').addEventListener('click', () => {
+          DeviceOrientationEvent.requestPermission()
+            .then(response => {
+              if (response === 'granted') {
+                if (window.engine) window.engine.hasGyro = true;
+              }
+              gyroOverlay.classList.add('hidden');
+              showBiometricScanner();
+            })
+            .catch(err => {
+              console.error(err);
+              gyroOverlay.classList.add('hidden');
+              showBiometricScanner();
+            });
+        }, { once: true });
+      } else {
+        showBiometricScanner();
+      }
     } else {
       typedCode = "";
       squawkCodeDisplay.innerText = "____";
