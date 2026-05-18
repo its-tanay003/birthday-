@@ -1362,11 +1362,11 @@ class EntryRadar {
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     
-    // Draw circles
-    this.ctx.arc(cx, cy, rMax * 0.25, 0, Math.PI*2);
-    this.ctx.arc(cx, cy, rMax * 0.5, 0, Math.PI*2);
-    this.ctx.arc(cx, cy, rMax * 0.75, 0, Math.PI*2);
-    this.ctx.arc(cx, cy, rMax - 2, 0, Math.PI*2);
+    // Draw circles - clamped to prevent IndexSizeError (Math.max used)
+    this.ctx.arc(cx, cy, Math.max(0.1, rMax * 0.25), 0, Math.PI*2);
+    this.ctx.arc(cx, cy, Math.max(0.1, rMax * 0.5), 0, Math.PI*2);
+    this.ctx.arc(cx, cy, Math.max(0.1, rMax * 0.75), 0, Math.PI*2);
+    this.ctx.arc(cx, cy, Math.max(0.1, rMax - 2), 0, Math.PI*2);
     this.ctx.stroke();
     
     // Draw cross hairs
@@ -1385,7 +1385,7 @@ class EntryRadar {
     gradient.addColorStop(1, 'rgba(0, 20, 5, 0.0)');
     this.ctx.fillStyle = gradient;
     this.ctx.beginPath();
-    this.ctx.arc(cx, cy, rMax, this.sweepAngle - 0.5, this.sweepAngle);
+    this.ctx.arc(cx, cy, Math.max(0.1, rMax), this.sweepAngle - 0.5, this.sweepAngle);
     this.ctx.lineTo(cx, cy);
     this.ctx.fill();
     
@@ -1412,7 +1412,7 @@ class EntryRadar {
       if (p.alpha > 0.01) {
         this.ctx.fillStyle = `rgba(57, 255, 20, ${p.alpha * 0.95})`;
         this.ctx.beginPath();
-        this.ctx.arc(cx + p.x, cy + p.y, p.size, 0, Math.PI*2);
+        this.ctx.arc(cx + p.x, cy + p.y, Math.max(0.1, p.size), 0, Math.PI*2);
         this.ctx.fill();
       }
     });
