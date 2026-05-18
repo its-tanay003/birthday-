@@ -53,6 +53,7 @@ html, body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  touch-action: none;
 }
 
 /* Custom Selection & Focus overrides */
@@ -97,6 +98,7 @@ html, body {
   width: 100%;
   height: 100%;
   display: block;
+  touch-action: none;
 }
 
 /* 4. Cinematic Magnetic Custom Cursor */
@@ -1540,5 +1542,21 @@ body.hovering .cursor-dot {
   height: 100%;
   z-index: 8;
   pointer-events: none;
+}
+
+/* Touch interaction safety & scroll locks for immersive mobile WebGL experience */
+#radar-canvas,
+#shatter-canvas,
+#glass-rain-overlay,
+.hud-throttle-box,
+#throttle-handle,
+.glowing-wheel-btn,
+.glowing-handprint,
+.fingerprint-btn,
+.polaroid-card,
+#story-cards-container,
+#enable-gyro-btn,
+.key-btn {
+  touch-action: none;
 }
 

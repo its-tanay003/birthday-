@@ -1136,16 +1136,31 @@ class Engine {
   }
 
   setupEventListeners() {
-    window.addEventListener('mousemove', (e) => {
-      this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      this.mouse.y = -(e.clientY / window.innerHeight) * 2 - 1;
+    const handlePointerMove = (x, y) => {
+      this.mouse.x = (x / window.innerWidth) * 2 - 1;
+      this.mouse.y = -(y / window.innerHeight) * 2 + 1; // Corrected sign mapping for y target coordinate
       
-      this.springCamX.setTarget(this.mouse.x * 0.85);
-      this.springCamY.setTarget(this.mouse.y * 0.55);
+      if (!this.hasGyro) {
+        this.springCamX.setTarget(this.mouse.x * 0.85);
+        this.springCamY.setTarget(-this.mouse.y * 0.55);
+      }
       
       // Perform raycast click check for Waypoint 1 light spheres
       this.checkSpheresCollision();
+    };
+
+    window.addEventListener('mousemove', (e) => {
+      handlePointerMove(e.clientX, e.clientY);
     });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        // Only trigger look-around if throttle leverage or yoke holds are inactive
+        if (!window.isThrottleDragging && !window.isYokeHolding) {
+          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }
+    }, { passive: true });
     
     window.addEventListener('deviceorientation', (e) => {
       if (e.beta !== null && e.gamma !== null) {
@@ -1167,6 +1182,7 @@ class Engine {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     });
   }
 
@@ -1320,12 +1336,15 @@ class EntryRadar {
     this.targetDetected = false;
     this.points = [];
     
+    this.resizeBound = () => this.resize();
+    this.drawBound = () => this.draw();
+    
     this.init();
   }
 
   init() {
     this.resize();
-    window.addEventListener('resize', () => this.resize());
+    window.addEventListener('resize', this.resizeBound);
     
     // Seed tactical blip points representing historical moments
     for (let i = 0; i < 5; i++) {
@@ -1339,13 +1358,24 @@ class EntryRadar {
       });
     }
     
-    gsap.ticker.add(() => this.draw());
+    gsap.ticker.add(this.drawBound);
   }
 
   resize() {
+    if (!this.canvas) return;
     const parent = this.canvas.parentElement;
-    this.canvas.width = parent.clientWidth;
-    this.canvas.height = parent.clientHeight;
+    if (parent) {
+      this.canvas.width = parent.clientWidth;
+      this.canvas.height = parent.clientHeight;
+    }
+  }
+
+  destroy() {
+    window.removeEventListener('resize', this.resizeBound);
+    gsap.ticker.remove(this.drawBound);
+    this.points = [];
+    this.canvas = null;
+    this.ctx = null;
   }
 
   draw() {
@@ -1480,6 +1510,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('key-send').addEventListener('click', () => {
     window.audio.playMechanicalClick();
     if (typedCode === "0521") {
+      // Background boot Three.js Engine and compile shaders during scanner hold
+      if (!window.engine) {
+        window.engine = new Engine();
+      }
+
       // Code unlocked! Handle gyroscopic permissions if on iOS 13+
       const showBiometricScanner = () => {
         document.querySelector('.squawk-keyboard').classList.add('hidden');
@@ -1570,8 +1605,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       
-      // Initialize Three.js Engine
-      window.engine = new Engine();
+      // Initialize Three.js Engine if not already allocated
+      if (!window.engine) {
+        window.engine = new Engine();
+      }
       window.audio.start();
       
       // Shatter Glass Canvas transition solver
@@ -1585,6 +1622,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ease: "power4.inOut",
         onComplete: () => {
           document.getElementById('preloader').remove();
+          radar.destroy();
           
           // Fade in cockpit HUD
           document.getElementById('hud-overlay').classList.remove('hidden');
@@ -1636,11 +1674,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const onDragStart = (e) => {
     isDragging = true;
+    window.isThrottleDragging = true;
     window.haptic.tick();
   };
   
   const onDragMove = (e) => {
     if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const trackRect = track.getBoundingClientRect();
     
@@ -1660,6 +1700,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const onDragEnd = () => {
     isDragging = false;
+    window.isThrottleDragging = false;
   };
   
   handle.addEventListener('mousedown', onDragStart);
@@ -1667,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('mouseup', onDragEnd);
   
   handle.addEventListener('touchstart', onDragStart);
-  window.addEventListener('touchmove', onDragMove);
+  window.addEventListener('touchmove', onDragMove, { passive: false });
   window.addEventListener('touchend', onDragEnd);
   
   let currentActiveWp = 0;
@@ -1829,6 +1870,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const startYokeHold = (e) => {
     activeYokeHold = true;
+    window.isYokeHolding = true;
     yokeBtn.classList.add('holding');
     if (window.engine) window.engine.isHoldingYoke = true;
     
@@ -1840,6 +1882,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const stopYokeHold = () => {
     activeYokeHold = false;
+    window.isYokeHolding = false;
     yokeBtn.classList.remove('holding');
     if (window.engine) {
       window.engine.isHoldingYoke = false;
@@ -1863,10 +1906,11 @@ document.addEventListener('DOMContentLoaded', () => {
   
   window.addEventListener('touchmove', (e) => {
     if (!activeYokeHold || !window.engine) return;
+    if (e.cancelable) e.preventDefault();
     const clientX = e.touches[0].clientX;
     const deltaX = (clientX - window.innerWidth / 2) / (window.innerWidth / 2);
     window.engine.yokeTargetRot = deltaX * Math.PI * 0.45;
-  });
+  }, { passive: false });
 
   // Waypoint 3: Tap Polaroid cards Climax "The Pull"
   document.getElementById('polaroid-hug').addEventListener('click', () => {
@@ -1936,10 +1980,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   handprint.addEventListener('touchstart', (e) => {
+    if (e.cancelable) e.preventDefault();
     wipeStartY = e.touches[0].clientY;
-  });
+  }, { passive: false });
   
   handprint.addEventListener('touchend', (e) => {
+    if (e.cancelable) e.preventDefault();
     const wipeEndY = e.changedTouches[0].clientY;
     if (wipeStartY - wipeEndY > 80) {
       window.haptic.doubleThump();
@@ -1963,7 +2009,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
-  });
+  }, { passive: false });
 
   // Waypoint 5 Climax Interactive Constellation Activation
   const finalHeartBtn = document.getElementById('final-heart');
