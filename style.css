@@ -1560,3 +1560,8 @@ body.hovering .cursor-dot {
   touch-action: none;
 }
 
+/* Global utility utility classes */
+.hidden {
+  display: none !important;
+}
+
