@@ -1565,3 +1565,74 @@ body.hovering .cursor-dot {
   display: none !important;
 }
 
+/* Gyroscope Instrument Calibration Dialog */
+#gyro-permission {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(3, 3, 7, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000; /* Layer above preloader overlay (10000) */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: fadePermissionIn 0.4s ease-out forwards;
+}
+
+@keyframes fadePermissionIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.permission-card {
+  max-width: 420px;
+  width: 90%;
+  padding: 35px 30px;
+  text-align: center;
+  background: var(--glass-bg);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: 0 0 50px rgba(57, 255, 20, 0.15);
+  border-radius: 14px;
+  animation: scaleCardIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes scaleCardIn {
+  from { transform: scale(0.9) translateY(20px); }
+  to { transform: scale(1) translateY(0); }
+}
+
+.permission-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--hud-amber);
+  margin-bottom: 18px;
+  text-transform: uppercase;
+  border: 1px solid var(--hud-amber-blur);
+  padding: 3px 12px;
+  display: inline-block;
+  border-radius: 4px;
+  background: rgba(255, 166, 0, 0.05);
+}
+
+.permission-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--hud-green);
+  margin-bottom: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--hud-green-blur);
+}
+
+.permission-desc {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  margin-bottom: 28px;
+}
+
+
