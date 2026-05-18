@@ -82,10 +82,30 @@
           <button class="key-btn enter-btn" id="key-send">SEND</button>
         </div>
 
+        <!-- Biometric thumbprint scanner overlay shown after squawk code matches -->
+        <div id="biometric-scanner" class="hidden">
+          <div class="fingerprint-wrapper">
+            <div class="fingerprint-glow"></div>
+            <button id="biometric-touch-btn" class="fingerprint-btn" aria-label="Scan Fingerprint">
+              <svg class="fingerprint-svg" viewBox="0 0 100 100">
+                <path d="M 50,15 A 35,35 0 0,1 85,50 A 35,35 0 0,1 50,85 A 35,35 0 0,1 15,50" class="fp-ring ring-1" />
+                <path d="M 50,25 Q 50,15 70,35 Q 50,55 30,35 Q 50,15 50,25" class="fp-line line-1" />
+                <path d="M 50,35 Q 50,25 65,42 Q 50,60 35,42 Q 50,25 50,35" class="fp-line line-2" />
+                <path d="M 50,45 Q 50,35 60,50 Q 50,65 40,50 Q 50,35 50,45" class="fp-line line-3" />
+                <circle cx="50" cy="50" r="5" class="fp-core" />
+              </svg>
+            </button>
+          </div>
+          <p class="biometric-desc monospace-font">SQUAWK NOMINAL. PRESS & HOLD THUMB TO INITIATE CO-PILOT COGNITIVE SYNC...</p>
+        </div>
+
         <div class="radar-helper-text">Hint: A perfect flight plan starts with your birthday (MMDD)</div>
       </div>
     </div>
   </div>
+
+  <!-- Physical Cockpit Shattered Glass Canvas -->
+  <canvas id="shatter-canvas" class="hidden"></canvas>
 
   <!-- Gyroscope Permission Dialog (Mobile Overlay) -->
   <div id="gyro-permission" class="hidden">

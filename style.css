@@ -1343,3 +1343,203 @@ body.hovering .cursor-dot {
     right: auto;
   }
 }
+
+/* ==========================================================================
+   18. Advanced RTX Graphic upgrades: Biometrics & Physics Shatter UI Elements
+   ========================================================================== */
+
+/* Physical cockpit shattered glass layer */
+#shatter-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* Biometric Fingerprint Scanner Widget styling */
+#biometric-scanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
+  width: 100%;
+  animation: fadeInScanner 0.5s ease-out forwards;
+}
+
+@keyframes fadeInScanner {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fingerprint-wrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fingerprint-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(57, 255, 20, 0.25) 0%, transparent 70%);
+  filter: blur(8px);
+  animation: glowPulse 2s infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+.fingerprint-btn {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--hud-green);
+  background: rgba(0, 20, 5, 0.7);
+  box-shadow: 0 0 15px var(--hud-green-blur);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  outline: none;
+}
+
+.fingerprint-btn:hover {
+  border-color: var(--hud-amber);
+  box-shadow: 0 0 25px var(--hud-amber-blur);
+}
+
+.fingerprint-btn:active, .fingerprint-btn.scanning {
+  border-color: #ffffff;
+  box-shadow: 0 0 35px #ffffff, inset 0 0 15px var(--hud-green);
+}
+
+.fingerprint-svg {
+  width: 50px;
+  height: 50px;
+}
+
+.fp-ring {
+  fill: none;
+  stroke: var(--hud-green-blur);
+  stroke-width: 1.5;
+  transition: stroke 0.3s;
+}
+
+.fp-line {
+  fill: none;
+  stroke: var(--hud-green);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: stroke 0.3s;
+}
+
+.fingerprint-btn:hover .fp-line {
+  animation: drawLines 1.5s ease-out forwards;
+}
+
+.fingerprint-btn:active .fp-line, .fingerprint-btn.scanning .fp-line {
+  stroke: #ffffff;
+  animation: scanProgress 1.2s infinite linear;
+}
+
+.fp-core {
+  fill: var(--hud-green);
+  transition: fill 0.3s;
+}
+
+.fingerprint-btn:active .fp-core, .fingerprint-btn.scanning .fp-core {
+  fill: #ffffff;
+  animation: corePulse 0.4s infinite alternate;
+}
+
+@keyframes drawLines {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes scanProgress {
+  0% { stroke-dashoffset: 100; }
+  50% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+
+@keyframes corePulse {
+  from { transform: scale(1); opacity: 0.7; }
+  to { transform: scale(1.4); opacity: 1; }
+}
+
+.biometric-desc {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  max-width: 85%;
+  text-align: center;
+}
+
+.biometric-desc.active {
+  color: var(--hud-green);
+  text-shadow: 0 0 6px var(--hud-green-blur);
+}
+
+/* Red Handprint stabilizer */
+.handprint-glow-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 15px auto;
+}
+
+.glowing-handprint {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px solid var(--color-heart-red);
+  background: rgba(20, 0, 5, 0.65);
+  box-shadow: 0 0 20px rgba(255, 10, 84, 0.4);
+  color: var(--color-heart-red);
+  font-size: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.glowing-handprint:hover {
+  box-shadow: 0 0 35px var(--color-heart-red);
+  transform: scale(1.05);
+}
+
+.glowing-handprint:active {
+  background: var(--color-heart-red);
+  color: #fff;
+  box-shadow: 0 0 45px var(--color-heart-red);
+  transform: scale(0.95);
+}
+
+/* Rain and glass sweep overlay */
+#glass-rain-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 8;
+  pointer-events: none;
+}
+
