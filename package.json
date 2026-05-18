@@ -1,0 +1,19 @@
+{
+  "name": "five-years-of-us",
+  "version": "1.0.0",
+  "description": "An interactive, emotionally resonant single-page 3D WebGL love letter experience.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "love-story",
+    "threejs",
+    "gsap",
+    "webgl",
+    "web-audio"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}

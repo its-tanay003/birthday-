@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kashvi — Flight Plan 0521</title>
+  
+  <!-- Meta tags for premium SEO & branding -->
+  <meta name="description" content="An immersive, first-person 3D WebGL aviation-themed cinematic birthday experience dedicated to Kashvi. Command the flight deck, steer through memories, weather storms, and unlock custom star constellations.">
+  <meta property="og:title" content="Kashvi — Happy Birthday">
+  <meta property="og:description" content="Experience a custom 3D airplane cockpit flight-deck journey. Interact with steering controls, mechanical throttles, storm handprints, and starry birthday constellations.">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts: Script font + Pilot Monospace/HUD font families -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Rajdhani:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="./src/style.css">
+
+  <!-- ESM Import Maps for direct CDN resolution -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm",
+      "gsap/ScrollTrigger": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger/+esm",
+      "lenis": "https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.mjs"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Cinematic Custom Cursor -->
+  <div id="custom-cursor">
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+  </div>
+
+  <!-- Ambient Audio Floating Controller (Top Right) -->
+  <div id="audio-controller" class="hidden">
+    <button id="audio-toggle" aria-label="Toggle Soundtrack" class="glass-btn hud-btn">
+      <div class="sound-bars">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span class="btn-text">AP ENGINE HUM</span>
+    </button>
+  </div>
+
+  <!-- Phase 1: ATC Radar Screen (Pre-flight Loader Screen) -->
+  <div id="preloader">
+    <div class="radar-container">
+      <canvas id="radar-canvas"></canvas>
+      <div class="radar-hud-badge">ATC SYSTEM ACTIVE</div>
+      <div class="radar-terminal">
+        <h1 class="radar-title">UNIDENTIFIED CONTACT</h1>
+        <p class="radar-prompt">WARNING: MULTIPLE CORRELATING TARGET PINGS. ENTER SQUAWK CODE TO ESTABLISH COMMS:</p>
+        
+        <div class="squawk-input-box">
+          <div class="squawk-field" id="squawk-code-display">____</div>
+          <span class="cursor-pulse">|</span>
+        </div>
+
+        <div class="squawk-keyboard dialer-keypad">
+          <button class="key-btn" data-val="1">1</button>
+          <button class="key-btn" data-val="2">2</button>
+          <button class="key-btn" data-val="3">3</button>
+          <button class="key-btn" data-val="4">4</button>
+          <button class="key-btn" data-val="5">5</button>
+          <button class="key-btn" data-val="6">6</button>
+          <button class="key-btn" data-val="7">7</button>
+          <button class="key-btn" data-val="8">8</button>
+          <button class="key-btn" data-val="9">9</button>
+          <button class="key-btn reset-btn" id="key-clear">CLEAR</button>
+          <button class="key-btn" data-val="0">0</button>
+          <button class="key-btn enter-btn" id="key-send">SEND</button>
+        </div>
+
+        <div class="radar-helper-text">Hint: A perfect flight plan starts with your birthday (MMDD)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gyroscope Permission Dialog (Mobile Overlay) -->
+  <div id="gyro-permission" class="hidden">
+    <div class="permission-card glass-card">
+      <div class="permission-badge">INSTRUMENT CALIBRATION</div>
+      <h2 class="permission-title">Flight Gyroscope Scanning</h2>
+      <p class="permission-desc">Modern iOS and Android cockpit environments require sensor calibration to rotate camera nodes inside memories cloud.</p>
+      <button id="enable-gyro-btn" class="glass-btn pulse-glow-btn">CALIBRATE FLIGHT GYRO</button>
+    </div>
+  </div>
+
+  <!-- Cockpit Heads-Up Display (HUD) Visual Overlay -->
+  <div id="hud-overlay" class="hidden">
+    <!-- Left Tape: Airspeed (IAS) -->
+    <div class="hud-tape hud-speed">
+      <div class="hud-tape-label">IAS</div>
+      <div class="hud-tape-scale">
+        <div class="hud-tape-val">220</div>
+        <div class="hud-tape-val">200</div>
+        <div class="hud-tape-val">180</div>
+        <div class="hud-tape-val active" id="hud-speed-val">140 KT</div>
+        <div class="hud-tape-val">120</div>
+        <div class="hud-tape-val">100</div>
+        <div class="hud-tape-val">80</div>
+      </div>
+    </div>
+
+    <!-- Right Tape: Altitude (ALT) -->
+    <div class="hud-tape hud-altitude">
+      <div class="hud-tape-label">ALT</div>
+      <div class="hud-tape-scale">
+        <div class="hud-tape-val">6000</div>
+        <div class="hud-tape-val">5000</div>
+        <div class="hud-tape-val">4000</div>
+        <div class="hud-tape-val active" id="hud-alt-val">0521 FT</div>
+        <div class="hud-tape-val">3000</div>
+        <div class="hud-tape-val">2000</div>
+        <div class="hud-tape-val">1000</div>
+      </div>
+    </div>
+
+    <!-- Center Pitch Ladder / Artificial Horizon -->
+    <div class="hud-horizon">
+      <div class="hud-aircraft-symbol"></div>
+      <div class="hud-pitch-ladder" id="hud-pitch-ladder">
+        <div class="hud-ladder-line pos-20"><span>20</span></div>
+        <div class="hud-ladder-line pos-10"><span>10</span></div>
+        <div class="hud-ladder-line zero-pitch"></div>
+        <div class="hud-ladder-line neg-10"><span>-10</span></div>
+        <div class="hud-ladder-line neg-20"><span>-20</span></div>
+      </div>
+    </div>
+
+    <!-- Top Compass Bar -->
+    <div class="hud-compass">
+      <div class="hud-compass-tape" id="hud-compass-tape">
+        <span>W</span><span>280</span><span>290</span><span>300</span><span>310</span><span>320</span><span>330</span><span>340</span><span>350</span><span class="active">N</span><span>010</span><span>020</span><span>030</span><span>040</span><span>050</span><span>060</span><span>070</span><span>080</span><span>E</span>
+      </div>
+      <div class="hud-compass-indicator">▼</div>
+    </div>
+
+    <!-- HUD Instrument Readings (Bottom Left) -->
+    <div class="hud-instrument-readings">
+      <div class="hud-readout">XPNDR: <span class="text-glow">0521</span></div>
+      <div class="hud-readout">G-FORCE: <span id="hud-gforce">1.00 G</span></div>
+      <div class="hud-readout">HDG: <span id="hud-heading">360°</span></div>
+      <div class="hud-readout">WIND: <span id="hud-wind">00 KT</span></div>
+    </div>
+
+    <!-- Dynamic 3D Throttle Lever Column (Left Control Column) -->
+    <div id="throttle-column" class="hud-throttle-box">
+      <div class="throttle-header">THRUST</div>
+      <div class="throttle-track">
+        <div id="throttle-handle" class="throttle-lever">
+          <div class="lever-knob"></div>
+          <div class="lever-rod"></div>
+        </div>
+      </div>
+      <div class="throttle-markers">
+        <div class="marker active" data-wp="0">T/O</div>
+        <div class="marker" data-wp="1">WP1</div>
+        <div class="marker" data-wp="2">WP2</div>
+        <div class="marker" data-wp="3">WP3</div>
+        <div class="marker" data-wp="4">TRB</div>
+        <div class="marker" data-wp="5">HRZ</div>
+      </div>
+    </div>
+
+    <!-- Co-Pilot Comms retro text console (Bottom Right) -->
+    <div id="copilot-comms" class="glass-card">
+      <div class="comms-header">CO-PILOT COMMS [SECURE]</div>
+      <div class="comms-body">
+        <div id="comms-text" class="monospace-font">Connecting...</div>
+        <span class="comms-cursor">_</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Dashboard Widgets Overlay -->
+  <div id="dashboard-widgets">
+    <!-- Waypoint 2: Steering Wheel Holding widget -->
+    <div id="steering-widget" class="hidden glass-card center-align">
+      <span class="widget-badge">TELEMETRY SYNC</span>
+      <h3 class="widget-title monospace-font">CO-PILOT STEERING CONTROLS</h3>
+      <p class="widget-desc">Click and hold the wheel to stabilize and matching torque...</p>
+      <button id="steering-wheel-btn" class="glowing-wheel-btn">
+        <span class="wheel-icon">⎈</span>
+      </button>
+    </div>
+
+    <!-- Waypoint 4: Glowing Red Handprint Turbulence Stabilizer -->
+    <div id="turbulence-glass" class="hidden">
+      <div class="stabilizer-card glass-card center-align">
+        <span class="widget-badge critical">DANGER: SHEAR IMMINENT</span>
+        <div class="handprint-glow-container">
+          <button id="handprint-stabilizer" class="glowing-handprint">✋</button>
+        </div>
+        <h3 class="widget-title text-danger monospace-font">TOUCH SCREEN GLASS</h3>
+        <p class="stabilizer-desc">Place your hand here to bypass cockpit stabilization filters...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text overlays / Narrative Glass Cards linking to waypoints -->
+  <div id="story-cards-container" class="hidden">
+    <!-- Waypoint 0: Takeoff -->
+    <div class="glass-card story-slide active" id="slide-takeoff" data-index="0">
+      <span class="card-tag">ALTITUDE LEVEL 01 • DEPARTURE</span>
+      <h2 class="section-title cursive-font text-glow">Cleared for Takeoff</h2>
+      <p class="section-desc">
+        May 21st. The day my sky got infinitely brighter. Happy Birthday, to the pilot of my heart, <span class="text-glow font-bold">Kashvi</span>. Push the throttle forward to take flight.
+      </p>
+      <div class="throttle-hint">
+        <span class="hint-arrow">▲</span>
+        <span class="hint-text monospace-font">DRAG THROTTLE TO WP1</span>
+      </div>
+    </div>
+
+    <!-- Waypoint 1: The New Year's Party -->
+    <div class="glass-card story-slide" id="slide-party" data-index="1">
+      <span class="card-tag">ALTITUDE LEVEL 02 • EN ROUTE</span>
+      <h2 class="section-title cursive-font">The Golden Room</h2>
+      <p class="section-desc">
+        The New Year's room was packed to the doors, music shaking the walls. But the second I saw you, the static died. Everything else went completely blurred. I was only ever looking at you.
+      </p>
+    </div>
+
+    <!-- Waypoint 2: The Driving Lesson -->
+    <div class="glass-card story-slide" id="slide-drive" data-index="2">
+      <span class="card-tag">ALTITUDE LEVEL 03 • STEERING CRUISE</span>
+      <h2 class="section-title cursive-font">Cruising Dashboard</h2>
+      <p class="section-desc">
+        Night drive lessons. Streetlights streaking past like meteor showers. You were so focused, eyes locked on the road, and I sat there completely mesmerized, co-piloting your wing.
+      </p>
+    </div>
+
+    <!-- Waypoint 3: The Mall Polaroid Clouds -->
+    <div class="glass-card story-slide" id="slide-memories" data-index="3">
+      <span class="card-tag">ALTITUDE LEVEL 04 • CLOUD LANDMARKS</span>
+      <h2 class="section-title cursive-font">Floating Snapshots</h2>
+      <p class="section-desc">
+        Mall trips, stolen golden hours, holding hot sparklers... our memories float around us like a visual horizon. Hover your view, tap the polaroid of our first hug, and feel the gravity.
+      </p>
+    </div>
+
+    <!-- Waypoint 4: Storm Turbulence -->
+    <div class="glass-card story-slide" id="slide-turbulence" data-index="4">
+      <span class="card-tag critical">ALTITUDE LEVEL 05 • STORMS REPORTED</span>
+      <h2 class="section-title text-danger cursive-font">Heavy Turbulence</h2>
+      <p class="section-desc">
+        I know I've caused some storm systems lately. I talks too much, reacts too fast, and let the static cloud us. I am so sorry for making you feel unheard. I am never letting go of your right wing.
+      </p>
+    </div>
+
+    <!-- Waypoint 5: Deep Space Birthday Constellation -->
+    <div class="glass-card story-slide" id="slide-horizon" data-index="5">
+      <span class="card-tag constellation-tag">ALTITUDE LEVEL 06 • INFINITE STARFIELD</span>
+      <h2 class="section-title text-sunset-glow cursive-font">Breaking the Horizon</h2>
+      <p class="section-desc text-final">
+        You are going to be the most brilliant pilot in the skies. But right now, on May 21st, you are my absolute everything.
+      </p>
+      <!-- Constellation Trigger button -->
+      <div class="final-heart-wrapper">
+        <button id="final-heart" class="glowing-beating-heart" aria-label="Activate Constellation">
+          <span class="inner-heart monospace-font">May 21st</span>
+          <span class="heart-pulse-ring"></span>
+        </button>
+        <span class="heart-instruction monospace-font">ACTIVATE CELESTIAL HORIZON</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive 3D Polaroid Container overlay for Waypoint 3 -->
+  <div id="polaroid-overlay" class="hidden">
+    <div class="polaroid-card item-1" id="polaroid-1">
+      <div class="polaroid-img-wrapper">
+        <img src="./assets/gallery/snapshot1.png" alt="Sunset Coast" onerror="this.src='https://picsum.photos/id/1015/300/250'"/>
+      </div>
+      <div class="polaroid-caption monospace-font">Sunset Silhouette</div>
+    </div>
+    <div class="polaroid-card item-2" id="polaroid-2">
+      <div class="polaroid-img-wrapper">
+        <img src="./assets/gallery/snapshot2.png" alt="Sparklers" onerror="this.src='https://picsum.photos/id/1043/300/250'"/>
+      </div>
+      <div class="polaroid-caption monospace-font">Sparklers at Night</div>
+    </div>
+    <div class="polaroid-card item-3 active-target" id="polaroid-hug">
+      <div class="polaroid-img-wrapper">
+        <img src="./assets/gallery/snapshot3.png" alt="First Hug Mall" onerror="this.src='https://picsum.photos/id/64/300/250'"/>
+      </div>
+      <div class="polaroid-caption monospace-font">TAP: Our First Hug</div>
+    </div>
+  </div>
+
+  <!-- Fullscreen WebGL 3D Sky canvas -->
+  <div id="webgl-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- Interactive Ripple Effect Container for Touch Clicks -->
+  <div id="ripple-container"></div>
+
+  <!-- Application Bootstrap Logic -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
